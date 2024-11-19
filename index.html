@@ -1,72 +1,113 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Meine Video-Webseite</title>
-    <link rel="stylesheet" href="style.css">
+    <title>Video Upload mit Fortschrittsanzeige</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+
+        #uploadForm {
+            margin-bottom: 20px;
+        }
+
+        .progress-container {
+            width: 100%;
+            background: #f3f3f3;
+            border-radius: 5px;
+            overflow: hidden;
+            margin-top: 10px;
+            height: 30px;
+            border: 1px solid #ccc;
+        }
+
+        .progress-bar {
+            width: 0%;
+            height: 100%;
+            background: #4caf50;
+            color: white;
+            text-align: center;
+            line-height: 30px;
+            font-size: 14px;
+        }
+
+        #message {
+            margin-top: 10px;
+            font-size: 16px;
+            color: #333;
+        }
+    </style>
 </head>
 <body>
-    <header>
-        <div class="container">
-            <h1>Willkommen auf meiner Video-Webseite</h1>
-            <nav>
-                <a href="#upload">Videos hochladen</a>
-                <a href="#videos">Meine Videos</a>
-            </nav>
-        </div>
-    </header>
+    <h1>Video Upload mit Fortschrittsanzeige</h1>
+    <form id="uploadForm">
+        <input type="file" name="videoFile" id="videoFile" accept="video/*" required>
+        <button type="button" id="uploadButton">Hochladen</button>
+    </form>
 
-    <main>
-        <!-- Video Upload Section -->
-        <section id="upload">
-            <div class="container">
-                <h2>Video hochladen</h2>
-                <form action="upload.php" method="POST" enctype="multipart/form-data">
-                    <input type="file" name="videoFile" id="videoFile" accept="video/*" required>
-                    <button type="submit">Video hochladen</button>
-                </form>
-            </div>
-        </section>
+    <div class="progress-container">
+        <div class="progress-bar" id="progressBar">0%</div>
+    </div>
 
-        <!-- Display uploaded videos -->
-        <section id="videos">
-            <div class="container">
-                <h2>Deine Videos</h2>
-                <div id="video-list">
-                    <?php
-                        // Ordner, in dem die Videos gespeichert sind
-                        $dir = "uploads/";
+    <div id="message"></div>
 
-                        // Alle Dateien im Ordner abrufen
-                        $files = scandir($dir);
+    <script>
+        const uploadButton = document.getElementById('uploadButton');
+        const progressBar = document.getElementById('progressBar');
+        const message = document.getElementById('message');
 
-                        // Alle Dateien durchgehen
-                        foreach ($files as $file) {
-                            // Verhindern, dass systemeigene Ordner wie '.' und '..' angezeigt werden
-                            if ($file !== '.' && $file !== '..') {
-                                // Nur Videodateien anzeigen (MP4-Dateien)
-                                $file_extension = pathinfo($file, PATHINFO_EXTENSION);
-                                if (in_array($file_extension, ['mp4', 'mov', 'avi', 'mkv'])) {
-                                    // HTML Video-Tag für das Abspielen des Videos
-                                    echo "<div class='video-item'>
-                                            <video width='320' height='240' controls>
-                                                <source src='$dir$file' type='video/mp4'>
-                                            </video>
-                                          </div>";
-                                }
-                            }
-                        }
-                    ?>
-                </div>
-            </div>
-        </section>
-    </main>
+        uploadButton.addEventListener('click', () => {
+            const fileInput = document.getElementById('videoFile');
+            const file = fileInput.files[0];
 
-    <footer>
-        <div class="container">
-            <p>&copy; 2024 Meine Video-Webseite</p>
-        </div>
-    </footer>
+            if (!file) {
+                alert('Bitte wählen Sie eine Datei aus!');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('videoFile', file);
+
+            const xhr = new XMLHttpRequest();
+
+            xhr.open('POST', 'upload.php', true);
+
+            // Fortschrittsanzeige aktualisieren
+            xhr.upload.addEventListener('progress', (event) => {
+                if (event.lengthComputable) {
+                    const percentComplete = Math.round((event.loaded / event.total) * 100);
+                    progressBar.style.width = percentComplete + '%';
+                    progressBar.textContent = percentComplete + '%';
+                }
+            });
+
+            // Nach dem Upload
+            xhr.onload = () => {
+                if (xhr.status === 200) {
+                    progressBar.style.width = '100%';
+                    progressBar.textContent = 'Fertig';
+                    message.textContent = xhr.responseText; // Zeigt die Antwort des PHP-Skripts
+                } else {
+                    message.textContent = 'Fehler beim Hochladen!';
+                }
+            };
+
+            // Fehlerbehandlung
+            xhr.onerror = () => {
+                message.textContent = 'Es gab ein Problem beim Hochladen.';
+            };
+
+            // Anfrage senden
+            xhr.send(formData);
+
+            // Ladebalken zurücksetzen, falls ein neuer Upload gestartet wird
+            progressBar.style.width = '0%';
+            progressBar.textContent = '0%';
+            message.textContent = '';
+        });
+    </script>
 </body>
 </html>
