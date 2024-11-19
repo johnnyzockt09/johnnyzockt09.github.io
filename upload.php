@@ -1,20 +1,26 @@
-<?php
-if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_FILES['videoFile'])) {
-    $target_dir = "uploads/";  // Hier landen die Videos
-    $target_file = $target_dir . basename($_FILES["videoFile"]["name"]);
-    $uploadOk = 1;
-    $videoFileType = strtolower(pathinfo($target_file, PATHINFO_EXTENSION));
+<div id="video-list">
+    <?php
+        // Ordner, in dem die Videos gespeichert sind
+        $dir = "uploads/";
 
-    // Überprüfen, ob es eine gültige Video-Datei ist
-    if (in_array($videoFileType, ['mp4', 'mov', 'avi', 'mkv'])) {
-        // Video speichern
-        if (move_uploaded_file($_FILES["videoFile"]["tmp_name"], $target_file)) {
-            echo "Das Video wurde erfolgreich hochgeladen.";
-        } else {
-            echo "Es gab ein Problem beim Hochladen des Videos.";
+        // Alle Dateien im Ordner abrufen
+        $files = scandir($dir);
+
+        // Alle Dateien durchgehen
+        foreach ($files as $file) {
+            // Verhindern, dass systemeigene Ordner wie '.' und '..' angezeigt werden
+            if ($file !== '.' && $file !== '..') {
+                // Nur Videodateien anzeigen (MP4-Dateien)
+                $file_extension = pathinfo($file, PATHINFO_EXTENSION);
+                if (in_array($file_extension, ['mp4', 'mov', 'avi', 'mkv'])) {
+                    // HTML Video-Tag für das Abspielen des Videos
+                    echo "<div class='video-item'>
+                            <video width='320' height='240' controls>
+                                <source src='$dir$file' type='video/mp4'>
+                            </video>
+                          </div>";
+                }
+            }
         }
-    } else {
-        echo "Nur Videos im Format MP4, MOV, AVI oder MKV sind erlaubt.";
-    }
-}
-?>
+    ?>
+</div>
