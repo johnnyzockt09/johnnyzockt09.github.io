@@ -1,38 +1,26 @@
-<?php
-if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_FILES['videoFile'])) {
-    $target_dir = "uploads/";  // Zielordner
-    $file_name = basename($_FILES["videoFile"]["name"]);
-    $target_file = $target_dir . $file_name;
-    $uploadOk = 1;
-    $videoFileType = strtolower(pathinfo($target_file, PATHINFO_EXTENSION));
-    $maxFileSize = 500 * 1024 * 1024; // 500 MB
+<div id="video-list">
+    <?php
+        // Ordner, in dem die Videos gespeichert sind
+        $dir = "uploads/";
 
-    // Überprüfen, ob der Ordner existiert, ansonsten erstellen
-    if (!is_dir($target_dir)) {
-        mkdir($target_dir, 0755, true);
-    }
+        // Alle Dateien im Ordner abrufen
+        $files = scandir($dir);
 
-    // Überprüfen, ob es eine gültige Video-Datei ist
-    if (!in_array($videoFileType, ['mp4', 'mov', 'avi', 'mkv'])) {
-        echo "Nur Videos im Format MP4, MOV, AVI oder MKV sind erlaubt.";
-        $uploadOk = 0;
-    }
-
-    // Datei-Größenprüfung
-    if ($_FILES["videoFile"]["size"] > $maxFileSize) {
-        echo "Die Datei ist zu groß. Maximal erlaubt: 500 MB.";
-        $uploadOk = 0;
-    }
-
-    // Wenn alles ok ist, Datei hochladen
-    if ($uploadOk) {
-        if (move_uploaded_file($_FILES["videoFile"]["tmp_name"], $target_file)) {
-            echo "Das Video '" . htmlspecialchars($file_name) . "' wurde erfolgreich hochgeladen.";
-        } else {
-            echo "Fehler beim Hochladen der Datei.";
+        // Alle Dateien durchgehen
+        foreach ($files as $file) {
+            // Verhindern, dass systemeigene Ordner wie '.' und '..' angezeigt werden
+            if ($file !== '.' && $file !== '..') {
+                // Nur Videodateien anzeigen (MP4-Dateien)
+                $file_extension = pathinfo($file, PATHINFO_EXTENSION);
+                if (in_array($file_extension, ['mp4', 'mov', 'avi', 'mkv'])) {
+                    // HTML Video-Tag für das Abspielen des Videos
+                    echo "<div class='video-item'>
+                            <video width='320' height='240' controls>
+                                <source src='$dir$file' type='video/mp4'>
+                            </video>
+                          </div>";
+                }
+            }
         }
-    }
-} else {
-    echo "Keine Datei hochgeladen.";
-}
-?>
+    ?>
+</div>
